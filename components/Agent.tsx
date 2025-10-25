@@ -265,6 +265,7 @@ const Agent = ({
   const [messages, setMessages] = useState<SavedMessage[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastMessage, setLastMessage] = useState<string>("");
+  const [geminiSummary, setGeminiSummary] = useState<string>("");
 
   const router = useRouter();
 
@@ -282,7 +283,7 @@ const Agent = ({
 
     const onSpeechStart = () => setIsSpeaking(true);
     const onSpeechEnd = () => setIsSpeaking(false);
-    const onError = (error: Error) => console.log("Error:", error);
+    const onError = (error: Error) => console.log("VAPI Error:", error);
 
     vapi.on("call-start", onCallStart);
     vapi.on("call-end", onCallEnd);
@@ -301,12 +302,15 @@ const Agent = ({
     };
   }, []);
 
-  // ---------- Handle Call End + Feedback Generation ----------
+  // ---------- Update last message ----------
   useEffect(() => {
     if (messages.length > 0) {
       setLastMessage(messages[messages.length - 1].content);
     }
+  }, [messages]);
 
+  // ---------- Handle Call End ----------
+  useEffect(() => {
     const generateFeedback = async () => {
       if (type === "generate") {
         router.push("/");
@@ -338,8 +342,29 @@ const Agent = ({
       }
     };
 
+    // ---------- Gemini Summary Generation ----------
+    const generateGeminiSummary = async () => {
+      if (messages.length === 0) return;
+
+      try {
+        console.log("Sending transcript to Gemini...", messages);
+        const res = await fetch("/api/gemini-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: messages }),
+        });
+
+        const data = await res.json();
+        console.log("Gemini Summary:", data, data.summary);
+        setGeminiSummary(data.summary);
+      } catch (error) {
+        console.log("Gemini summary failed:", error);
+      }
+    };
+
     if (callStatus === CallStatus.FINISHED) {
       generateFeedback();
+      generateGeminiSummary();
     }
   }, [callStatus, messages, interviewId, type, userId, router]);
 
@@ -424,18 +449,27 @@ const Agent = ({
         </div>
       )}
 
+      {/* Gemini Summary Display */}
+      {geminiSummary && (
+        <div className="p-4 bg-gray-100 rounded-md mt-4">
+          <h3>📝 Gemini Summary</h3>
+          <p>{geminiSummary}</p>
+        </div>
+      )}
+
       {/* Call Control Button */}
-      <div className="w-full flex justify-center">
-        {callStatus !== "ACTIVE" ? (
+      <div className="w-full flex justify-center mt-4">
+        {callStatus !== CallStatus.ACTIVE ? (
           <button className="relative btn-call" onClick={handleCall}>
             <span
               className={cn(
                 "absolute animate-ping rounded-full opacity-75",
-                callStatus !== "CONNECTING" && "hidden"
+                callStatus !== CallStatus.CONNECTING && "hidden"
               )}
             />
             <span className="relative">
-              {callStatus === "INACTIVE" || callStatus === "FINISHED"
+              {callStatus === CallStatus.INACTIVE ||
+              callStatus === CallStatus.FINISHED
                 ? "Call"
                 : ". . ."}
             </span>
