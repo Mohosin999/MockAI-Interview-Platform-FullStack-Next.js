@@ -9,6 +9,7 @@ import {
   getLatestInterviews,
 } from "@/lib/actions/general.action";
 import InterviewCard from "@/components/InterviewCard";
+import VapiWidget from "@/components/VapiWidget";
 
 async function Home() {
   const user = await getCurrentUser();
@@ -87,6 +88,8 @@ async function Home() {
           )}
         </div>
       </section>
+
+      <VapiWidget />
     </>
   );
 }
