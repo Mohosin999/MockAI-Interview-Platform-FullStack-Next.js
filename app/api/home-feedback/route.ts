@@ -37,11 +37,12 @@ export async function POST(req: NextRequest) {
     const prompt = `
     You are an AI classifier. Based on the conversation transcript,
     decide whether it is a "mock-interview" or "interview-questions".
-    Return ONLY one of these two words, nothing else. If user is not response within the transcript, return empty string.
-
-      Transcript:
-      ${formattedTranscript}
+    Return ONLY one of these two words, nothing else.
+    
+    Transcript:
+    ${formattedTranscript}
     `.trim();
+    // If user is not response within the transcript, return empty string.
 
     // Initialize Gemini model
     const ai = new GoogleGenerativeAI(apiKey);
