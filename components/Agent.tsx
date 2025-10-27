@@ -33,7 +33,6 @@ const Agent = ({
   userName,
   userId,
   interviewId,
-  feedbackId,
   type,
   questions,
 }: AgentProps) => {
@@ -41,14 +40,23 @@ const Agent = ({
   const [messages, setMessages] = useState<SavedMessage[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastMessage, setLastMessage] = useState<string>("");
-  const [geminiSummary, setGeminiSummary] = useState<string>("");
+  const [generatedFeedbackId, setGeneratedFeedbackId] = useState<string | null>(
+    null
+  );
 
   const router = useRouter();
 
-  // ---------- VAPI event handlers ----------
+  // ---------- VAPI Event Handlers ----------
   useEffect(() => {
-    const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
-    const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
+    const onCallStart = () => {
+      console.log("Call started");
+      setCallStatus(CallStatus.ACTIVE);
+    };
+
+    const onCallEnd = () => {
+      console.log("Call ended");
+      setCallStatus(CallStatus.FINISHED);
+    };
 
     const onMessage = (message: any) => {
       if (message.type === "transcript" && message.transcriptType === "final") {
@@ -57,10 +65,23 @@ const Agent = ({
       }
     };
 
-    const onSpeechStart = () => setIsSpeaking(true);
-    const onSpeechEnd = () => setIsSpeaking(false);
-    const onError = (error: Error) => console.log("VAPI Error:", error);
+    const onSpeechStart = () => {
+      console.log("Speech started");
+      setIsSpeaking(true);
+    };
 
+    const onSpeechEnd = () => {
+      console.log("Speech ended");
+      setIsSpeaking(false);
+    };
+
+    const onError = (error: Error) => {
+      console.error("VAPI Error:", error);
+      // Optionally handle errors by ending the call
+      setCallStatus(CallStatus.FINISHED);
+    };
+
+    // Register event listeners
     vapi.on("call-start", onCallStart);
     vapi.on("call-end", onCallEnd);
     vapi.on("message", onMessage);
@@ -68,6 +89,7 @@ const Agent = ({
     vapi.on("speech-end", onSpeechEnd);
     vapi.on("error", onError);
 
+    // Cleanup function to remove event listeners
     return () => {
       vapi.off("call-start", onCallStart);
       vapi.off("call-end", onCallEnd);
@@ -78,79 +100,112 @@ const Agent = ({
     };
   }, []);
 
-  // ---------- Update last message ----------
+  // ---------- Update Last Message for Display ----------
   useEffect(() => {
     if (messages.length > 0) {
-      setLastMessage(messages[messages.length - 1].content);
+      const latestMessage = messages[messages.length - 1].content;
+      setLastMessage(latestMessage);
+      console.log("Last message updated:", latestMessage);
     }
   }, [messages]);
 
+  // ---------- Handle Call Completion and Redirect ----------
   useEffect(() => {
-    const generateGeminiSummary = async () => {
-      if (messages.length === 0) return;
+    const handleCallCompletion = async () => {
+      // Only proceed if call is finished and we have messages
+      if (callStatus !== CallStatus.FINISHED || messages.length === 0) {
+        return;
+      }
+
+      console.log("Call finished, generating summary...");
 
       try {
-        const res = await fetch("/api/gemini", {
+        // Generate Gemini summary
+        const res = await fetch("/api/interview-feedback", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ interviewId, userId, transcript: messages }),
+          body: JSON.stringify({
+            interviewId,
+            userId,
+            transcript: messages,
+          }),
         });
 
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
         const data = await res.json();
-        console.log("Full response:", data);
+        console.log("Gemini summary generated:", data);
 
-        // Access the feedback object correctly
-        if (data.feedback) {
-          console.log("Total Score:", data.feedback.totalScore);
-          console.log("Strengths:", data.feedback.strengths);
-          console.log("Final Assessment:", data.feedback.finalAssessment);
-
-          // If you want to display the summary as text, you might want to format it
-          const summaryText = `
-          Total Score: ${data.feedback.totalScore}/100
-          Final Assessment: ${data.feedback.finalAssessment}
-          Strengths: ${data.feedback.strengths?.join(", ")}
-          Areas for Improvement: ${data.feedback.areasForImprovement?.join(
-            ", "
-          )}
-        `;
-          setGeminiSummary(summaryText);
-
-          // Or if you want to store the entire feedback object for later use
-          // setGeminiSummary(JSON.stringify(data.feedback, null, 2));
+        // Store the feedback ID for redirection
+        if (data.feedbackId) {
+          setGeneratedFeedbackId(data.feedbackId);
+        } else {
+          console.warn("No feedbackId received from Gemini API");
+          // Fallback to interviewId if available
+          if (interviewId) {
+            setGeneratedFeedbackId(interviewId);
+          }
         }
       } catch (error) {
-        console.log("Gemini summary failed:", error);
+        console.error("Gemini summary generation failed:", error);
+        // Even if Gemini fails, we should still redirect with available IDs
+        if (interviewId) {
+          setGeneratedFeedbackId(interviewId);
+        }
       }
     };
 
-    if (callStatus === CallStatus.FINISHED) {
-      generateGeminiSummary();
-    }
-  }, [callStatus, messages, interviewId, type, userId, router]);
+    handleCallCompletion();
+  }, [callStatus, messages, interviewId, userId]);
 
-  // ---------- Call Control ----------
+  // ---------- Handle Redirection When Feedback ID is Available ----------
+  useEffect(() => {
+    const redirectToFeedback = () => {
+      // Only redirect when we have a valid feedback ID and call is finished
+      if (callStatus === CallStatus.FINISHED && generatedFeedbackId) {
+        console.log("Redirecting to feedback page:", generatedFeedbackId);
+
+        // Use setTimeout to ensure the component completes its state updates
+        setTimeout(() => {
+          router.push(`/mock-interview/${generatedFeedbackId}/feedback`);
+        }, 1000); // Small delay to ensure smooth transition
+      }
+    };
+
+    redirectToFeedback();
+  }, [generatedFeedbackId, callStatus, router]);
+
+  // ---------- Call Control Functions ----------
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
 
-    if (type === "generate") {
-      await vapi.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, {
-        variableValues: {
-          username: userName,
-          userid: userId,
-        },
-      });
-    } else {
-      let formattedQuestions = "";
-      if (questions) {
-        formattedQuestions = questions.map((q) => `- ${q}`).join("\n");
-      }
+    try {
+      if (type === "generate") {
+        // Start with VAPI assistant for question generation
+        await vapi.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, {
+          variableValues: {
+            username: userName,
+            userid: userId,
+          },
+        });
+      } else {
+        // Start interview with predefined questions
+        let formattedQuestions = "";
+        if (questions && questions.length > 0) {
+          formattedQuestions = questions.map((q) => `- ${q}`).join("\n");
+        }
 
-      await vapi.start(interviewer, {
-        variableValues: {
-          questions: formattedQuestions,
-        },
-      });
+        await vapi.start(interviewer, {
+          variableValues: {
+            questions: formattedQuestions,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Failed to start call:", error);
+      setCallStatus(CallStatus.INACTIVE);
     }
   };
 
@@ -159,7 +214,7 @@ const Agent = ({
     vapi.stop();
   };
 
-  // ---------- UI ----------
+  // ---------- Render UI ----------
   return (
     <>
       <div className="call-view">
@@ -172,7 +227,9 @@ const Agent = ({
               width={65}
               height={54}
               className="object-cover"
+              priority // Important for above-the-fold images
             />
+            {/* Speaking animation indicator */}
             {isSpeaking && <span className="animate-speak" />}
           </div>
           <h3>AI Interviewer</h3>
@@ -187,6 +244,7 @@ const Agent = ({
               width={120}
               height={120}
               className="rounded-full object-cover"
+              priority
             />
             <h3>{userName}</h3>
           </div>
@@ -210,18 +268,15 @@ const Agent = ({
         </div>
       )}
 
-      {/* Gemini Summary Display */}
-      {geminiSummary && (
-        <div className="p-4 bg-gray-900 rounded-md mt-4">
-          <h3>📝 Gemini Summary</h3>
-          <p>{geminiSummary}</p>
-        </div>
-      )}
-
       {/* Call Control Button */}
       <div className="w-full flex justify-center mt-4">
         {callStatus !== CallStatus.ACTIVE ? (
-          <button className="relative btn-call" onClick={handleCall}>
+          <button
+            className="relative btn-call"
+            onClick={handleCall}
+            disabled={callStatus === CallStatus.CONNECTING}
+          >
+            {/* Loading animation */}
             <span
               className={cn(
                 "absolute animate-ping rounded-full opacity-75",
@@ -231,16 +286,25 @@ const Agent = ({
             <span className="relative">
               {callStatus === CallStatus.INACTIVE ||
               callStatus === CallStatus.FINISHED
-                ? "Call"
-                : ". . ."}
+                ? "Start Call"
+                : "Connecting..."}
             </span>
           </button>
         ) : (
           <button className="btn-disconnect" onClick={handleDisconnect}>
-            End
+            End Call
           </button>
         )}
       </div>
+
+      {/* Debug info (remove in production) */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
+          <p>Status: {callStatus}</p>
+          <p>Messages: {messages.length}</p>
+          <p>Feedback ID: {generatedFeedbackId || "Not generated"}</p>
+        </div>
+      )}
     </>
   );
 };

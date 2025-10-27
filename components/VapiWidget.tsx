@@ -1,77 +1,289 @@
 // "use client";
 
-// import React, { useState, useEffect } from "react";
-// import Vapi from "@vapi-ai/web";
+// import Image from "next/image";
+// import { useState, useEffect } from "react";
+// import { useRouter } from "next/navigation";
 
-// const VapiWidget: React.FC = () => {
-//   const [error, setError] = useState<string>("");
-//   const [isCallActive, setIsCallActive] = useState(false);
-//   const [vapiInstance, setVapiInstance] = useState<Vapi | null>(null);
+// import { cn } from "@/lib/utils";
+// import { vapi } from "@/lib/vapi.sdk";
+// import { interviewer } from "@/constants";
 
+// enum CallStatus {
+//   INACTIVE = "INACTIVE",
+//   CONNECTING = "CONNECTING",
+//   ACTIVE = "ACTIVE",
+//   FINISHED = "FINISHED",
+// }
+
+// interface SavedMessage {
+//   role: "user" | "system" | "assistant";
+//   content: string;
+// }
+
+// interface AgentProps {
+//   userName: string;
+//   userId: string;
+//   interviewId?: string;
+//   feedbackId?: string;
+//   type: "generate" | "interview";
+//   questions?: string[];
+// }
+
+// const Agent = ({
+//   userName,
+//   userId,
+//   interviewId,
+//   type,
+//   questions,
+// }: AgentProps) => {
+//   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
+//   const [messages, setMessages] = useState<SavedMessage[]>([]);
+//   const [isSpeaking, setIsSpeaking] = useState(false);
+//   const [lastMessage, setLastMessage] = useState<string>("");
+//   const [generatedFeedbackId, setGeneratedFeedbackId] = useState<string | null>(
+//     null
+//   );
+
+//   const router = useRouter();
+
+//   // ---------- VAPI Event Handlers ----------
 //   useEffect(() => {
-//     // Initialize Vapi instance
-//     const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_WEB_TOKEN!);
-//     setVapiInstance(vapi);
-
-//     // Set up event listeners
-//     vapi.on("call-start", () => {
+//     const onCallStart = () => {
 //       console.log("Call started");
-//       setIsCallActive(true);
-//     });
+//       setCallStatus(CallStatus.ACTIVE);
+//     };
 
-//     vapi.on("call-end", () => {
+//     const onCallEnd = () => {
 //       console.log("Call ended");
-//       setIsCallActive(false);
-//     });
+//       setCallStatus(CallStatus.FINISHED);
+//     };
 
-//     // Cleanup
+//     const onMessage = (message: any) => {
+//       if (message.type === "transcript" && message.transcriptType === "final") {
+//         const newMessage = { role: message.role, content: message.transcript };
+//         setMessages((prev) => [...prev, newMessage]);
+//       }
+//     };
+
+//     const onSpeechStart = () => {
+//       console.log("Speech started");
+//       setIsSpeaking(true);
+//     };
+
+//     const onSpeechEnd = () => {
+//       console.log("Speech ended");
+//       setIsSpeaking(false);
+//     };
+
+//     const onError = (error: Error) => {
+//       console.error("VAPI Error:", error);
+//       // Optionally handle errors by ending the call
+//       setCallStatus(CallStatus.FINISHED);
+//     };
+
+//     // Register event listeners
+//     vapi.on("call-start", onCallStart);
+//     vapi.on("call-end", onCallEnd);
+//     vapi.on("message", onMessage);
+//     vapi.on("speech-start", onSpeechStart);
+//     vapi.on("speech-end", onSpeechEnd);
+//     vapi.on("error", onError);
+
+//     // Cleanup function to remove event listeners
 //     return () => {
-//       vapi?.stop();
+//       vapi.off("call-start", onCallStart);
+//       vapi.off("call-end", onCallEnd);
+//       vapi.off("message", onMessage);
+//       vapi.off("speech-start", onSpeechStart);
+//       vapi.off("speech-end", onSpeechEnd);
+//       vapi.off("error", onError);
 //     };
 //   }, []);
 
-//   const handleCall = async () => {
-//     try {
-//       if (isCallActive) {
-//         // End call
-//         await vapiInstance?.stop();
-//       } else {
-//         // Start call
-//         await vapiInstance?.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!);
+//   // ---------- Update Last Message for Display ----------
+//   useEffect(() => {
+//     if (messages.length > 0) {
+//       const latestMessage = messages[messages.length - 1].content;
+//       setLastMessage(latestMessage);
+//       console.log("Last message updated:", latestMessage);
+//     }
+//   }, [messages]);
+
+//   // ---------- Handle Call Completion and Redirect ----------
+//   useEffect(() => {
+//     const handleCallCompletion = async () => {
+//       // Only proceed if call is finished and we have messages
+//       if (callStatus !== CallStatus.FINISHED || messages.length === 0) {
+//         return;
 //       }
-//     } catch (err) {
-//       console.error("Vapi error:", err);
-//       setError(err.message);
-//       setIsCallActive(false);
+
+//       try {
+//         // Generate Gemini summary
+//         const res = await fetch("/api/home-feedback", {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify({
+//             transcript: messages,
+//           }),
+//         });
+
+//         if (!res.ok) {
+//           throw new Error(`HTTP error! status: ${res.status}`);
+//         }
+
+//         const data = await res.json();
+//         console.log("Data---> :", data.feedback);
+
+//         // Store the feedback ID for redirection
+//         if (data.feedbackId) {
+//           setGeneratedFeedbackId(data.feedbackId);
+//         } else {
+//           console.warn("No feedbackId received from Gemini API");
+//           // Fallback to interviewId if available
+//           if (interviewId) {
+//             setGeneratedFeedbackId(interviewId);
+//           }
+//         }
+//       } catch (error) {
+//         console.error("Gemini summary generation failed:", error);
+//         // Even if Gemini fails, we should still redirect with available IDs
+//         if (interviewId) {
+//           setGeneratedFeedbackId(interviewId);
+//         }
+//       }
+//     };
+
+//     handleCallCompletion();
+//   }, [callStatus, messages, interviewId, userId]);
+
+//   // ---------- Handle Redirection When Feedback ID is Available ----------
+//   // useEffect(() => {
+//   //   const redirectToFeedback = () => {
+//   //     // Only redirect when we have a valid feedback ID and call is finished
+//   //     if (callStatus === CallStatus.FINISHED && generatedFeedbackId) {
+//   //       console.log("Redirecting to feedback page:", generatedFeedbackId);
+
+//   //       // Use setTimeout to ensure the component completes its state updates
+//   //       setTimeout(() => {
+//   //         router.push(`/interview/${generatedFeedbackId}/feedback`);
+//   //       }, 1000); // Small delay to ensure smooth transition
+//   //     }
+//   //   };
+
+//   //   redirectToFeedback();
+//   // }, [generatedFeedbackId, callStatus, router]);
+
+//   // ---------- Call Control Functions ----------
+//   const handleCall = async () => {
+//     setCallStatus(CallStatus.CONNECTING);
+
+//     try {
+//       if (type === "generate") {
+//         // Start with VAPI assistant for question generation
+//         await vapi.start(process.env.NEXT_PUBLIC_VAPI_HOME_ASSISTANT_ID!, {
+//           variableValues: {
+//             username: userName,
+//             userid: userId,
+//           },
+//         });
+//       } else {
+//         // Start interview with predefined questions
+//         let formattedQuestions = "";
+//         if (questions && questions.length > 0) {
+//           formattedQuestions = questions.map((q) => `- ${q}`).join("\n");
+//         }
+
+//         await vapi.start(interviewer, {
+//           variableValues: {
+//             questions: formattedQuestions,
+//           },
+//         });
+//       }
+//     } catch (error) {
+//       console.error("Failed to start call:", error);
+//       setCallStatus(CallStatus.INACTIVE);
 //     }
 //   };
 
+//   const handleDisconnect = () => {
+//     setCallStatus(CallStatus.FINISHED);
+//     vapi.stop();
+//   };
+
+//   // ---------- Render UI ----------
 //   return (
-//     <div>
-//       <button
-//         onClick={handleCall}
-//         style={{
-//           backgroundColor: isCallActive ? "#ff4444" : "#4CAF50",
-//           color: "white",
-//           padding: "10px 20px",
-//           border: "none",
-//           borderRadius: "5px",
-//           cursor: "pointer",
-//         }}
-//       >
-//         {isCallActive ? "End Call" : "Start Call"}
-//       </button>
-//       {error && <p style={{ color: "red" }}>{error}</p>}
-//     </div>
+//     <>
+//       <div className="call-view">
+//         {/* AI Interviewer Card */}
+//         <div className="card-interviewer">
+//           <div className="avatar">
+//             <Image
+//               src="/ai-avatar.png"
+//               alt="AI Interviewer"
+//               width={65}
+//               height={54}
+//               className="object-cover"
+//               priority // Important for above-the-fold images
+//             />
+//             {/* Speaking animation indicator */}
+//             {isSpeaking && <span className="animate-speak" />}
+//           </div>
+//           <h3>AI Interviewer</h3>
+//         </div>
+
+//         {/* Call Control Button */}
+//         <div className="w-full flex justify-center mt-4">
+//           {callStatus !== CallStatus.ACTIVE ? (
+//             <button
+//               className="relative btn-call"
+//               onClick={handleCall}
+//               disabled={callStatus === CallStatus.CONNECTING}
+//             >
+//               {/* Loading animation */}
+//               <span
+//                 className={cn(
+//                   "absolute animate-ping rounded-full opacity-75",
+//                   callStatus !== CallStatus.CONNECTING && "hidden"
+//                 )}
+//               />
+//               <span className="relative">
+//                 {callStatus === CallStatus.INACTIVE ||
+//                 callStatus === CallStatus.FINISHED
+//                   ? "Start Call"
+//                   : "Connecting..."}
+//               </span>
+//             </button>
+//           ) : (
+//             <button className="btn-disconnect" onClick={handleDisconnect}>
+//               End Call
+//             </button>
+//           )}
+//         </div>
+
+//         {/* Debug info (remove in production) */}
+//         {process.env.NODE_ENV === "development" && (
+//           <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
+//             <p>Status: {callStatus}</p>
+//             <p>Messages: {messages.length}</p>
+//             <p>Feedback ID: {generatedFeedbackId || "Not generated"}</p>
+//           </div>
+//         )}
+//       </div>
+//     </>
 //   );
 // };
 
-// export default VapiWidget;
+// export default Agent;
 
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Vapi from "@vapi-ai/web";
+import Image from "next/image";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+import { cn } from "@/lib/utils";
+import { vapi } from "@/lib/vapi.sdk";
+import { interviewer } from "@/constants";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -80,36 +292,72 @@ enum CallStatus {
   FINISHED = "FINISHED",
 }
 
-const VapiWidget: React.FC = () => {
-  const [vapiInstance, setVapiInstance] = useState<Vapi | null>(null);
+interface SavedMessage {
+  role: "user" | "system" | "assistant";
+  content: string;
+}
+
+interface AgentProps {
+  userName: string;
+  userId: string;
+  interviewId?: string;
+  feedbackId?: string;
+  type: "generate" | "interview";
+  questions?: string[];
+}
+
+const Agent = ({
+  userName,
+  userId,
+  interviewId,
+  type,
+  questions,
+}: AgentProps) => {
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
+  const [messages, setMessages] = useState<SavedMessage[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>(
-    []
+  const [generatedFeedbackId, setGeneratedFeedbackId] = useState<string | null>(
+    null
   );
-  const [error, setError] = useState<string>("");
 
+  const router = useRouter();
+
+  // ---------- VAPI Event Handlers ----------
   useEffect(() => {
-    const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_WEB_TOKEN!);
-    setVapiInstance(vapi);
+    const onCallStart = () => {
+      console.log("Call started");
+      setCallStatus(CallStatus.ACTIVE);
+    };
 
-    // Event handlers
-    const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
-    const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
+    const onCallEnd = () => {
+      console.log("Call ended");
+      setCallStatus(CallStatus.FINISHED);
+    };
+
     const onMessage = (message: any) => {
-      // Only final transcript messages
       if (message.type === "transcript" && message.transcriptType === "final") {
-        setMessages((prev) => [
-          ...prev,
-          { role: message.role, content: message.transcript },
-        ]);
+        const newMessage = { role: message.role, content: message.transcript };
+        setMessages((prev) => [...prev, newMessage]);
       }
     };
-    const onSpeechStart = () => setIsSpeaking(true);
-    const onSpeechEnd = () => setIsSpeaking(false);
-    const onError = (err: Error) => console.error("Vapi Error:", err);
 
-    // Attach listeners
+    const onSpeechStart = () => {
+      console.log("Speech started");
+      setIsSpeaking(true);
+    };
+
+    const onSpeechEnd = () => {
+      console.log("Speech ended");
+      setIsSpeaking(false);
+    };
+
+    const onError = (error: Error) => {
+      console.error("VAPI Error:", error);
+      // Optionally handle errors by ending the call
+      setCallStatus(CallStatus.FINISHED);
+    };
+
+    // Register event listeners
     vapi.on("call-start", onCallStart);
     vapi.on("call-end", onCallEnd);
     vapi.on("message", onMessage);
@@ -117,68 +365,172 @@ const VapiWidget: React.FC = () => {
     vapi.on("speech-end", onSpeechEnd);
     vapi.on("error", onError);
 
+    // Cleanup function to remove event listeners
     return () => {
-      // Cleanup
       vapi.off("call-start", onCallStart);
       vapi.off("call-end", onCallEnd);
       vapi.off("message", onMessage);
       vapi.off("speech-start", onSpeechStart);
       vapi.off("speech-end", onSpeechEnd);
       vapi.off("error", onError);
-      vapi.stop();
     };
   }, []);
 
+  // ---------- Handle Call Completion and Redirect ----------
+  useEffect(() => {
+    const handleCallCompletion = async () => {
+      // Only proceed if call is finished and we have messages
+      if (callStatus !== CallStatus.FINISHED || messages.length === 0) {
+        return;
+      }
+
+      try {
+        // Generate Gemini summary
+        const res = await fetch("/api/home-feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            transcript: messages,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const data = await res.json();
+        console.log("akash-luna", data.feedback);
+
+        if (data.feedback === "mock-interview") {
+          router.push("/mock-interview");
+        } else if (data.feedback === "interview-questions") {
+          router.push("/interview-questions");
+        } else {
+          router.push("/");
+        }
+      } catch (error) {
+        console.error("Gemini summary generation failed:", error);
+      }
+    };
+
+    handleCallCompletion();
+  }, [callStatus, messages, interviewId, userId]);
+
+  // ---------- Handle Redirection When Feedback ID is Available ----------
+  // useEffect(() => {
+  //   const redirectToFeedback = () => {
+  //     // Only redirect when we have a valid feedback ID and call is finished
+  //     if (callStatus === CallStatus.FINISHED && generatedFeedbackId) {
+  //       console.log("Redirecting to feedback page:", generatedFeedbackId);
+
+  //       // Use setTimeout to ensure the component completes its state updates
+  //       setTimeout(() => {
+  //         router.push(`/interview/${generatedFeedbackId}/feedback`);
+  //       }, 1000); // Small delay to ensure smooth transition
+  //     }
+  //   };
+
+  //   redirectToFeedback();
+  // }, [generatedFeedbackId, callStatus, router]);
+
+  // ---------- Call Control Functions ----------
   const handleCall = async () => {
-    if (!vapiInstance) return;
+    setCallStatus(CallStatus.CONNECTING);
 
     try {
-      if (callStatus === CallStatus.ACTIVE) {
-        await vapiInstance.stop();
+      if (type === "generate") {
+        // Start with VAPI assistant for question generation
+        await vapi.start(process.env.NEXT_PUBLIC_VAPI_HOME_ASSISTANT_ID!, {
+          variableValues: {
+            username: userName,
+            userid: userId,
+          },
+        });
       } else {
-        await vapiInstance.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!);
+        // Start interview with predefined questions
+        let formattedQuestions = "";
+        if (questions && questions.length > 0) {
+          formattedQuestions = questions.map((q) => `- ${q}`).join("\n");
+        }
+
+        await vapi.start(interviewer, {
+          variableValues: {
+            questions: formattedQuestions,
+          },
+        });
       }
-    } catch (err: any) {
-      console.error("Vapi call error:", err);
-      setError(err.message || "Unknown error");
+    } catch (error) {
+      console.error("Failed to start call:", error);
+      setCallStatus(CallStatus.INACTIVE);
     }
   };
 
+  const handleDisconnect = () => {
+    setCallStatus(CallStatus.FINISHED);
+    vapi.stop();
+  };
+
+  // ---------- Render UI ----------
   return (
-    <div>
-      <button
-        onClick={handleCall}
-        style={{
-          backgroundColor:
-            callStatus === CallStatus.ACTIVE ? "#ff4444" : "#4CAF50",
-          color: "white",
-          padding: "10px 20px",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-      >
-        {callStatus === CallStatus.ACTIVE ? "End Call" : "Start Call"}
-      </button>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {/* Combined messages */}
-      <div style={{ marginTop: "20px" }}>
-        <div
-          style={{
-            backgroundColor: "#000",
-            padding: "10px",
-            borderRadius: "8px",
-            whiteSpace: "pre-wrap",
-            lineHeight: "1.5",
-          }}
-        >
-          {messages.map((msg) => `${msg.role}: ${msg.content}`).join("\n\n")}
+    <>
+      <div className="call-view">
+        {/* AI Interviewer Card */}
+        <div className="card-interviewer">
+          <div className="avatar">
+            <Image
+              src="/ai-avatar.png"
+              alt="AI Interviewer"
+              width={65}
+              height={54}
+              className="object-cover"
+              priority // Important for above-the-fold images
+            />
+            {/* Speaking animation indicator */}
+            {isSpeaking && <span className="animate-speak" />}
+          </div>
+          <h3>AI Interviewer</h3>
         </div>
+
+        {/* Call Control Button */}
+        <div className="w-full flex justify-center mt-4">
+          {callStatus !== CallStatus.ACTIVE ? (
+            <button
+              className="relative btn-call"
+              onClick={handleCall}
+              disabled={callStatus === CallStatus.CONNECTING}
+            >
+              {/* Loading animation */}
+              <span
+                className={cn(
+                  "absolute animate-ping rounded-full opacity-75",
+                  callStatus !== CallStatus.CONNECTING && "hidden"
+                )}
+              />
+              <span className="relative">
+                {callStatus === CallStatus.INACTIVE ||
+                callStatus === CallStatus.FINISHED
+                  ? "Start Call"
+                  : "Connecting..."}
+              </span>
+            </button>
+          ) : (
+            <button className="btn-disconnect" onClick={handleDisconnect}>
+              End Call
+            </button>
+          )}
+        </div>
+
+        {/* Debug info (remove in production) */}
+        {process.env.NODE_ENV === "development" && (
+          <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
+            <p>Status: {callStatus}</p>
+            <p>Messages: {messages.length}</p>
+            <p>Feedback ID: {generatedFeedbackId || "Not generated"}</p>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 };
 
-export default VapiWidget;
+export default Agent;

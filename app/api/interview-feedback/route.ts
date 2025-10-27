@@ -6,17 +6,16 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const { interviewId, userId, transcript } = await req.json();
+    const { transcript } = await req.json();
 
-    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    // Validate API key
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!apiKey) {
       return NextResponse.json(
         { error: "Missing GOOGLE_GENERATIVE_AI_API_KEY" },
         { status: 500 }
       );
     }
-
-    const ai = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY);
-    const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     // Convert messages array to prompt text
     const modifiedTranscript = transcript
@@ -26,7 +25,7 @@ export async function POST(req: NextRequest) {
       )
       .join("\n");
 
-    // Generate content with more specific instructions
+    // Generate prompt from AI
     const prompt = `
       You are an AI interviewer analyzing a mock interview.
 
@@ -34,15 +33,6 @@ export async function POST(req: NextRequest) {
       Analyze it carefully and return structured feedback as a VALID JSON OBJECT following this exact schema:
 
       {
-        "totalScore": number (0-100),
-        "categoryScores": [
-          {
-            "categoryName": string,
-            "score": number (0-100),
-            "comment": string
-          }
-        ],
-        "strengths": string[],
         "areasForImprovement": string[],
         "finalAssessment": string
       }
@@ -52,6 +42,10 @@ export async function POST(req: NextRequest) {
       Transcript:
       ${modifiedTranscript}
     `;
+
+    // Initialize Gemini model
+    const ai = new GoogleGenerativeAI(apiKey);
+    const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
@@ -81,19 +75,8 @@ export async function POST(req: NextRequest) {
 
       // Create a clean, Firestore-compatible feedback object
       const feedback = {
-        interviewId: interviewId || "",
-        userId: userId || "",
-        totalScore: Number(summary.totalScore) || 0,
-        categoryScores: (summary.categoryScores || []).map((cat: any) => ({
-          categoryName: String(cat.categoryName || ""),
-          score: Number(cat.score) || 0,
-          comment: String(cat.comment || ""),
-        })),
-        strengths: (summary.strengths || [])
-          .map((s: any) => String(s || ""))
-          .filter(Boolean),
         areasForImprovement: (summary.areasForImprovement || [])
-          .map((a: any) => String(a || ""))
+          .map((area: string) => String(area || ""))
           .filter(Boolean),
         finalAssessment: String(
           summary.finalAssessment || "No assessment provided"
@@ -102,9 +85,9 @@ export async function POST(req: NextRequest) {
       };
 
       // await db.collection("success").add({ ok: true });
-      await db.collection("feedback").add(feedback);
+      const docRef = await db.collection("feedback").add(feedback);
 
-      return NextResponse.json({ feedback });
+      return NextResponse.json({ responseText, feedbackId: docRef.id });
     } catch (parseError) {
       console.error("JSON parsing error:", parseError);
 
