@@ -455,7 +455,11 @@ const Agent = ({
             onClick={handleCall}
             onTouchStart={handleCall}
             disabled={callStatus === CallStatus.CONNECTING}
-            className="relative flex items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 transition-all shadow-lg"
+            // className="relative flex items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 transition-all shadow-lg"
+            className={cn(
+              "relative flex items-center justify-center w-16 h-16 rounded-full text-white hover:bg-red-600 transition-all shadow-lg",
+              callStatus === CallStatus.ACTIVE ? "bg-green-500" : "bg-red-500"
+            )}
           >
             {/* Ping Animation */}
             <span
