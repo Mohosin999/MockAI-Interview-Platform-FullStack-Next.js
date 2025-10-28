@@ -197,7 +197,7 @@ const Agent = ({
   // ---------- Render UI ----------
   return (
     <>
-      <div className="call-view">
+      <div className="call-view mt-6 md:mt-12">
         {/* Call Button */}
         <div className="w-full flex flex-col items-center justify-center">
           <button
@@ -205,15 +205,19 @@ const Agent = ({
             onTouchStart={handleCall}
             disabled={callStatus === CallStatus.CONNECTING}
             className={cn(
-              "relative flex items-center justify-center w-20 h-20 rounded-full text-white hover:bg-red-600 transition-all shadow-lg",
-              callStatus === CallStatus.ACTIVE ? "bg-red-500" : "bg-green-500"
+              "relative flex items-center justify-center w-20 h-20 rounded-full text-white transition-all shadow-lg cursor-pointer",
+              callStatus === CallStatus.ACTIVE
+                ? "bg-red-500 hover:bg-red-600"
+                : "bg-green-500 hover:bg-green-600"
             )}
           >
             {/* Ping Animation */}
             <span
               className={cn(
-                "absolute w-full h-full rounded-full bg-red-500 opacity-75 animate-ping",
-                callStatus !== CallStatus.CONNECTING && "hidden"
+                "absolute w-full h-full rounded-full opacity-75",
+                callStatus === CallStatus.ACTIVE
+                  ? "animate-ping bg-red-500"
+                  : "hidden"
               )}
             />
 
@@ -225,7 +229,7 @@ const Agent = ({
             )}
           </button>
 
-          <h3 className="mt-6 text-lg font-semibold text-gray-300">
+          <h3 className="mt-3 text-lg font-semibold text-gray-300">
             {callStatus === CallStatus.CONNECTING
               ? "Connecting..."
               : callStatus === CallStatus.ACTIVE
