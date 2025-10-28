@@ -2,7 +2,7 @@ import Image from "next/image";
 
 const Loader = () => {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-[#010624]/30 backdrop-blur-md z-50">
       <div className="relative flex items-center justify-center">
         {/* Logo */}
         <Image

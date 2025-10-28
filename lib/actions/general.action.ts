@@ -1,10 +1,26 @@
 "use server";
 
-import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
-
 import { db } from "@/firebase/admin";
-import { feedbackSchema } from "@/constants";
+
+export async function getFeedbacksByUserId(userId: string) {
+  try {
+    const snapshot = await db
+      .collection("feedback")
+      .where("userId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const feedbacks = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return feedbacks;
+  } catch (error) {
+    console.error("Error fetching feedbacks:", error);
+    return [];
+  }
+}
 
 export async function createFeedback(params: CreateFeedbackParams) {
   console.log("createFeedback");

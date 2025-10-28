@@ -125,7 +125,6 @@ const Agent = ({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            interviewId,
             userId,
             transcript: messages,
           }),
@@ -136,7 +135,6 @@ const Agent = ({
         }
 
         const data = await res.json();
-        console.log("Gemini summary generated:", data);
 
         // Store the feedback ID for redirection
         if (data.feedbackId) {
@@ -222,7 +220,7 @@ const Agent = ({
         <div className="card-interviewer">
           <div className="avatar">
             <Image
-              src="/ai-avatar.png"
+              src="/logo.png"
               alt="AI Interviewer"
               width={65}
               height={54}
@@ -239,7 +237,7 @@ const Agent = ({
         <div className="card-border">
           <div className="card-content">
             <Image
-              src="/user-avatar.png"
+              src="/user-avatar.jpg"
               alt="User Avatar"
               width={120}
               height={120}

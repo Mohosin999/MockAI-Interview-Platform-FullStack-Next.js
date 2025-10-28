@@ -24,36 +24,38 @@
 
 //   return (
 //     <>
-//       <section className="card-cta">
-//         <div className="flex flex-col gap-6 max-w-2xl">
-//           <h2>
-//             Read, Practice, and Perfect Your Interview Skills with Smart AI
-//           </h2>
-//           <p className="text-lg">
-//             You can use button or AI call to go to your specific page
-//           </p>
+//       <section>
+//         <div className="card-cta">
+//           <div className="flex flex-col gap-6 max-w-2xl">
+//             <h2>
+//               Read, Practice, and Perfect Your Interview Skills with Smart AI
+//             </h2>
+//             <p className="text-lg">
+//               You can use button or AI call to go to your specific page
+//             </p>
 
-//           <div className="flex flex-col lg:flex-row items-center gap-3">
-//             <Button asChild className="btn-primary max-sm:w-full">
-//               <Link href="/mock-interview">Mock Interview</Link>
-//             </Button>
+//             <div className="flex flex-col md:flex-row items-center gap-3">
+//               <Button asChild className="btn-primary max-sm:w-full">
+//                 <Link href="/mock-interview">Mock Interview</Link>
+//               </Button>
 
-//             <Button asChild className="btn-primary max-sm:w-full">
-//               <Link href="/interview-questions">Interview Questions</Link>
-//             </Button>
+//               <Button asChild className="btn-primary max-sm:w-full">
+//                 <Link href="/interview-questions">Interview Questions</Link>
+//               </Button>
+//             </div>
 //           </div>
+
+//           <Image
+//             src="/newRobot.png"
+//             alt="robo-dude"
+//             width={400}
+//             height={400}
+//             className="hidden lg:block"
+//           />
 //         </div>
 
-//         <Image
-//           src="/newRobot.png"
-//           alt="robo-dude"
-//           width={400}
-//           height={400}
-//           className="max-sm:hidden"
-//         />
+//         <VapiWidget userName={user?.name!} userId={user?.id} type="generate" />
 //       </section>
-
-//       <VapiWidget userName={user?.name!} userId={user?.id} type="generate" />
 
 //       <section className="flex flex-col gap-6 mt-8">
 //         <h2>Your Interviews</h2>
@@ -89,6 +91,7 @@ import { Button } from "@/components/ui/button";
 
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import {
+  getFeedbacksByUserId,
   getInterviewsByUserId,
   getLatestInterviews,
 } from "@/lib/actions/general.action";
@@ -105,6 +108,9 @@ async function Home() {
 
   const hasPastInterviews = userInterviews?.length! > 0;
   const hasUpcomingInterviews = allInterview?.length! > 0;
+
+  const feedbacks = await getFeedbacksByUserId(user?.id);
+  console.log("akash is here", feedbacks);
 
   return (
     <>

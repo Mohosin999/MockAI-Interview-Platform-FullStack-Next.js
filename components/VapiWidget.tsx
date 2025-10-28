@@ -254,16 +254,6 @@ const Agent = ({
               ? "In Call"
               : "Call"}
           </h3>
-
-          <button
-            onClick={() =>
-              handleOpen(
-                "https://www.geeksforgeeks.org/reactjs/next-js-interview-questions-answers/"
-              )
-            }
-          >
-            oi akash
-          </button>
         </div>
       </div>
     </>

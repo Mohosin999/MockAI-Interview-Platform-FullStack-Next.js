@@ -31,11 +31,12 @@ export async function signUp(params: SignUpParams) {
   try {
     // check if user exists in db
     const userRecord = await db.collection("users").doc(uid).get();
-    if (userRecord.exists)
+    if (userRecord.exists) {
       return {
         success: false,
         message: "User already exists. Please sign in.",
       };
+    }
 
     // save user to db
     await db.collection("users").doc(uid).set({
@@ -49,21 +50,12 @@ export async function signUp(params: SignUpParams) {
       success: true,
       message: "Account created successfully. Please sign in.",
     };
-  } catch (error: any) {
-    console.error("Error creating user:", error);
-
-    // Handle Firebase specific errors
-    if (error.code === "auth/email-already-exists") {
-      return {
-        success: false,
-        message: "This email is already in use",
-      };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+    } else {
+      console.error("Unexpected error:", error);
     }
-
-    return {
-      success: false,
-      message: "Failed to create account. Please try again.",
-    };
   }
 }
 
@@ -72,27 +64,26 @@ export async function signIn(params: SignInParams) {
 
   try {
     const userRecord = await auth.getUserByEmail(email);
-    if (!userRecord)
+    if (!userRecord) {
       return {
         success: false,
         message: "User does not exist. Create an account.",
       };
+    }
 
     await setSessionCookie(idToken);
-  } catch (error: any) {
-    console.log("");
-
-    return {
-      success: false,
-      message: "Failed to log into account. Please try again.",
-    };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+    } else {
+      console.error("Unexpected error:", error);
+    }
   }
 }
 
 // Sign out user by clearing the session cookie
 export async function signOut() {
   const cookieStore = await cookies();
-
   cookieStore.delete("session");
 }
 
@@ -111,6 +102,7 @@ export async function getCurrentUser(): Promise<User | null> {
       .collection("users")
       .doc(decodedClaims.uid)
       .get();
+
     if (!userRecord.exists) return null;
 
     return {
@@ -119,8 +111,6 @@ export async function getCurrentUser(): Promise<User | null> {
     } as User;
   } catch (error) {
     console.log(error);
-
-    // Invalid or expired session
     return null;
   }
 }
