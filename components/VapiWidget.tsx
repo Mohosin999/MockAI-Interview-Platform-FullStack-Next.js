@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
+import { Phone, PhoneOff } from "lucide-react";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -197,16 +198,15 @@ const Agent = ({
   return (
     <>
       <div className="call-view">
-        {/* Microphone Button */}
-        <div className="w-full flex flex-col md:flex-row items-center justify-center">
+        {/* Call Button */}
+        <div className="w-full flex flex-col items-center justify-center">
           <button
             onClick={handleCall}
             onTouchStart={handleCall}
             disabled={callStatus === CallStatus.CONNECTING}
-            // className="relative flex items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 transition-all shadow-lg"
             className={cn(
-              "relative flex items-center justify-center w-16 h-16 rounded-full text-white hover:bg-red-600 transition-all shadow-lg",
-              callStatus === CallStatus.ACTIVE ? "bg-green-500" : "bg-red-500"
+              "relative flex items-center justify-center w-20 h-20 rounded-full text-white hover:bg-red-600 transition-all shadow-lg",
+              callStatus === CallStatus.ACTIVE ? "bg-red-500" : "bg-green-500"
             )}
           >
             {/* Ping Animation */}
@@ -216,25 +216,21 @@ const Agent = ({
                 callStatus !== CallStatus.CONNECTING && "hidden"
               )}
             />
-            {/* Microphone Icon */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="relative w-7 h-7"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 1.5a3 3 0 013 3v9a3 3 0 01-6 0v-9a3 3 0 013-3zM19.5 10.5a7.5 7.5 0 01-15 0M12 19.5v3"
-              />
-            </svg>
+
+            {/* Call Icon */}
+            {callStatus === CallStatus.ACTIVE ? (
+              <Phone className="relative w-8 h-8" />
+            ) : (
+              <PhoneOff className="relative w-8 h-8" />
+            )}
           </button>
 
-          <h3 className="mt-10 text-lg font-semibold text-gray-700">
-            {callStatus === CallStatus.CONNECTING ? "Connecting..." : "Speak"}
+          <h3 className="mt-6 text-lg font-semibold text-gray-300">
+            {callStatus === CallStatus.CONNECTING
+              ? "Connecting..."
+              : callStatus === CallStatus.ACTIVE
+              ? "In Call"
+              : "Call"}
           </h3>
         </div>
       </div>
