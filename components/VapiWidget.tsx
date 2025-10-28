@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import { Phone, PhoneOff } from "lucide-react";
+import { url } from "inspector";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -45,6 +46,10 @@ const Agent = ({
   );
 
   const router = useRouter();
+
+  const handleOpen = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   // ---------- VAPI Event Handlers ----------
   useEffect(() => {
@@ -123,12 +128,25 @@ const Agent = ({
         }
 
         const data = await res.json();
-        console.log("akash-luna", data.feedback);
 
         if (data.feedback === "mock-interview") {
           router.push("/mock-interview");
-        } else if (data.feedback === "interview-questions") {
-          router.push("/interview-questions");
+        } else if (data.feedback === "interview-questions-javascript") {
+          handleOpen(
+            "https://www.geeksforgeeks.org/javascript/javascript-interview-questions/"
+          );
+        } else if (data.feedback === "interview-questions-typescript") {
+          handleOpen(
+            "https://www.geeksforgeeks.org/typescript/typescript-interview-questions/"
+          );
+        } else if (data.feedback === "interview-questions-react") {
+          handleOpen(
+            "https://www.geeksforgeeks.org/reactjs/react-interview-questions/"
+          );
+        } else if (data.feedback === "interview-questions-nextjs") {
+          handleOpen(
+            "https://www.geeksforgeeks.org/reactjs/next-js-interview-questions-answers/"
+          );
         } else {
           router.push("/");
         }
@@ -236,6 +254,16 @@ const Agent = ({
               ? "In Call"
               : "Call"}
           </h3>
+
+          <button
+            onClick={() =>
+              handleOpen(
+                "https://www.geeksforgeeks.org/reactjs/next-js-interview-questions-answers/"
+              )
+            }
+          >
+            oi akash
+          </button>
         </div>
       </div>
     </>
