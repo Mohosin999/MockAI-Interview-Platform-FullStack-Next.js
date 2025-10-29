@@ -5,6 +5,7 @@
 
 // import { getCurrentUser } from "@/lib/actions/auth.action";
 // import {
+//   getFeedbacksByUserId,
 //   getInterviewsByUserId,
 //   getLatestInterviews,
 // } from "@/lib/actions/general.action";
@@ -21,6 +22,9 @@
 
 //   const hasPastInterviews = userInterviews?.length! > 0;
 //   const hasUpcomingInterviews = allInterview?.length! > 0;
+
+//   const feedbacks = await getFeedbacksByUserId(user?.id);
+//   console.log("akash is here", feedbacks);
 
 //   return (
 //     <>
@@ -151,11 +155,11 @@ async function Home() {
         <h2>Your Interviews</h2>
 
         <div className="interviews-section">
-          {hasPastInterviews ? (
-            userInterviews?.map((interview) => (
+          {feedbacks ? (
+            feedbacks?.map((feedback) => (
               <InterviewCard
-                key={interview.id}
-                userId={user?.id}
+                key={feedback.id}
+                userId={feedback.userId}
                 interviewId={interview.id}
                 role={interview.role}
                 type={interview.type}

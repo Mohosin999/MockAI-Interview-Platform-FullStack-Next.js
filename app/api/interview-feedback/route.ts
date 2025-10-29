@@ -33,6 +33,7 @@
 //       Analyze it carefully and return structured feedback as a VALID JSON OBJECT following this exact schema:
 
 //       {
+//         "overallScore": number/100,
 //         "areasForImprovement": string[],
 //         "finalAssessment": string
 //       }
@@ -74,6 +75,8 @@
 
 //       // Create a clean, Firestore-compatible feedback object
 //       const feedback = {
+//         userId,
+//         overallScore: summary.overallScore,
 //         areasForImprovement: (summary.areasForImprovement || [])
 //           .map((area: string) => String(area || ""))
 //           .filter(Boolean),
@@ -133,22 +136,37 @@ export async function POST(req: NextRequest) {
 
     // Generate prompt from AI
     const prompt = `
-      You are an AI interviewer analyzing a mock interview.
+You are an AI interviewer analyzing a mock interview.
 
-      Below is the entire transcript of the conversation between interviewer and candidate.
-      Analyze it carefully and return structured feedback as a VALID JSON OBJECT following this exact schema:
+Below is the entire transcript of the conversation between interviewer and candidate.
+Analyze it carefully and return structured feedback as a VALID JSON OBJECT following this exact schema:
 
-      {
-        "overallScore": number/100,
-        "areasForImprovement": string[],
-        "finalAssessment": string
-      }
+overallScore: a number from 0 to 100 representing the candidate's performance score.
+role: the role the interview is for, for example "Frontend Developer".
+type: the type of interview, such as "technical", "behavioral", or "mixed".
+techstack: a list of technologies mentioned or used during the interview.
+questionsWithAIAnswers: for each question, include the original question and a short, professional AI-crafted answer (text only).
+areasForImprovement: a list of actionable suggestions based on the candidate’s answers.
 
-      IMPORTANT: Return ONLY the JSON object, no additional text, no markdown formatting, no code blocks.
+{
+  "overallScore": number,
+  "role": string,
+  "type": string,
+  "techstack": string[],
+  "questionsWithAIAnswers": [
+    {
+      "question": string,
+      "answer": string
+    }
+  ],
+  "areasForImprovement": string[]
+}
 
-      Transcript:
-      ${modifiedTranscript}
-    `;
+IMPORTANT: Return ONLY the JSON object, no additional text, no markdown formatting, no code blocks.
+
+Transcript:
+${modifiedTranscript}
+`;
 
     // Initialize Gemini model
     const ai = new GoogleGenerativeAI(apiKey);
@@ -182,13 +200,21 @@ export async function POST(req: NextRequest) {
       // Create a clean, Firestore-compatible feedback object
       const feedback = {
         userId,
+        role: String(summary.role || "Unknown role"),
+        type: String(summary.type || "Unknown type"),
+        techstack: (summary.techstack || [])
+          .map((tech: string) => String(tech))
+          .filter(Boolean),
         overallScore: summary.overallScore,
+        questionsWithAIAnswers: (summary.questionsWithAIAnswers || []).map(
+          (q: { question: string; answer: string }) => ({
+            question: String(q.question || ""),
+            answer: String(q.answer || ""),
+          })
+        ),
         areasForImprovement: (summary.areasForImprovement || [])
           .map((area: string) => String(area || ""))
           .filter(Boolean),
-        finalAssessment: String(
-          summary.finalAssessment || "No assessment provided"
-        ),
         createdAt: new Date().toISOString(),
       };
 
