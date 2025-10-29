@@ -152,19 +152,20 @@ async function Home() {
       </section>
 
       <section className="flex flex-col gap-6 mt-8">
-        <h2>Your Interviews</h2>
+        <h2>Your Interview Feedbacks</h2>
 
         <div className="interviews-section">
           {feedbacks ? (
-            feedbacks?.map((feedback) => (
+            feedbacks.map((feedback) => (
               <InterviewCard
                 key={feedback.id}
+                feedbackId={feedback.id}
                 userId={feedback.userId}
-                interviewId={interview.id}
-                role={interview.role}
-                type={interview.type}
-                techstack={interview.techstack}
-                createdAt={interview.createdAt}
+                role={feedback.role}
+                type={feedback.type}
+                techstack={feedback.techstack}
+                overallScore={feedback.overallScore}
+                createdAt={feedback.createdAt}
               />
             ))
           ) : (

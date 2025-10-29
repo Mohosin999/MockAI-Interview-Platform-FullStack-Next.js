@@ -39,11 +39,12 @@ interface User {
 }
 
 interface InterviewCardProps {
-  interviewId?: string;
+  feedbackId?: string;
   userId?: string;
   role: string;
   type: string;
   techstack: string[];
+  overallScore: number;
   createdAt?: string;
 }
 
