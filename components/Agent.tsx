@@ -267,7 +267,7 @@ const Agent = ({
       )}
 
       {/* Call Control Button */}
-      <div className="w-full flex justify-center mt-4">
+      <div className="w-full flex justify-center">
         {callStatus !== CallStatus.ACTIVE ? (
           <button
             className="relative btn-call"
@@ -294,15 +294,6 @@ const Agent = ({
           </button>
         )}
       </div>
-
-      {/* Debug info (remove in production) */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
-          <p>Status: {callStatus}</p>
-          <p>Messages: {messages.length}</p>
-          <p>Feedback ID: {generatedFeedbackId || "Not generated"}</p>
-        </div>
-      )}
     </>
   );
 };

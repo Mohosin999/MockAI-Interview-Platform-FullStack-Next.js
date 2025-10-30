@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
-import { Phone, PhoneOff } from "lucide-react";
+import { Phone, PhoneOff, PhoneCall } from "lucide-react";
 import { url } from "inspector";
 
 enum CallStatus {
@@ -215,7 +215,7 @@ const Agent = ({
   // ---------- Render UI ----------
   return (
     <>
-      <div className="call-view mt-6 md:mt-12">
+      <div className="call-view mt-8 md:mt-12">
         {/* Call Button */}
         <div className="w-full flex flex-col items-center justify-center">
           <button
@@ -223,10 +223,10 @@ const Agent = ({
             onTouchStart={handleCall}
             disabled={callStatus === CallStatus.CONNECTING}
             className={cn(
-              "relative flex items-center justify-center w-20 h-20 rounded-full text-white transition-all shadow-lg cursor-pointer",
+              "relative flex items-center justify-center w-20 h-20 rounded-full text-white transition-all shadow-lg cursor-pointer active:scale-105",
               callStatus === CallStatus.ACTIVE
                 ? "bg-red-500 hover:bg-red-600"
-                : "bg-green-500 hover:bg-green-600"
+                : "bg-[#3EE7F6] text-gray-900 hover:bg-[#3EE7F6]/80"
             )}
           >
             {/* Ping Animation */}
@@ -240,20 +240,27 @@ const Agent = ({
             />
 
             {/* Call Icon */}
+            {/* {callStatus === CallStatus.ACTIVE ? (
+              <Phone className="relative w-8 h-8" />
+            ) : (
+              <PhoneOff className="relative w-8 h-8" />
+            )} */}
             {callStatus === CallStatus.ACTIVE ? (
               <Phone className="relative w-8 h-8" />
+            ) : callStatus === CallStatus.CONNECTING ? (
+              <PhoneCall className="relative w-8 h-8" />
             ) : (
               <PhoneOff className="relative w-8 h-8" />
             )}
           </button>
 
-          <h3 className="mt-3 text-lg font-semibold text-gray-300">
+          {/* <h3 className="mt-3 text-lg font-semibold text-gray-300">
             {callStatus === CallStatus.CONNECTING
               ? "Connecting..."
               : callStatus === CallStatus.ACTIVE
               ? "In Call"
               : "Call"}
-          </h3>
+          </h3> */}
         </div>
       </div>
     </>
