@@ -5,8 +5,40 @@ interface Feedback {
   role: string;
   type: string;
   techstack: string[];
+  questionsWithAIAnswers: string[];
+  areasForImprovement: string[];
   overallScore: number;
   createdAt: string;
+}
+
+// done
+interface SavedMessage {
+  role: "user" | "system" | "assistant";
+  content: string;
+}
+
+// done
+interface AgentProps {
+  userName: string;
+  userId: string;
+  interviewId?: string;
+  feedbackId?: string;
+  type: "generate" | "interview";
+  questions?: string[];
+}
+
+// done
+interface RouteParams {
+  params: Promise<Record<string, string>>;
+  searchParams: Promise<Record<string, string>>;
+}
+
+// done
+interface VapiMessage {
+  type: string;
+  transcriptType?: string;
+  role?: string;
+  transcript?: string;
 }
 
 interface Interview {
@@ -51,11 +83,6 @@ interface AgentProps {
   feedbackId?: string;
   type: "generate" | "interview";
   questions?: string[];
-}
-
-interface RouteParams {
-  params: Promise<Record<string, string>>;
-  searchParams: Promise<Record<string, string>>;
 }
 
 interface GetFeedbackByInterviewIdParams {

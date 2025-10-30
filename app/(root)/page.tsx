@@ -10,14 +10,7 @@ import { Button } from "@/components/ui/button";
 async function Home() {
   const user = await getCurrentUser();
 
-  // Check if user is authenticated
-  if (!user?.id) {
-    return (
-      <div>
-        <h2>You are not logged in. Please sign in.</h2>
-      </div>
-    );
-  }
+  if (!user?.id) return null;
 
   const feedbacks = await getFeedbacksByUserId(user.id);
 
