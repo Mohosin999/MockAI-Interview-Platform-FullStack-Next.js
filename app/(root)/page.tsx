@@ -1,33 +1,30 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import { Button } from "@/components/ui/button";
-
 import { getCurrentUser } from "@/lib/actions/auth.action";
-import {
-  getFeedbacksByUserId,
-  getInterviewsByUserId,
-  getLatestInterviews,
-} from "@/lib/actions/general.action";
+import { getFeedbacksByUserId } from "@/lib/actions/general.action";
 import InterviewCard from "@/components/InterviewCard";
 import VapiWidget from "@/components/VapiWidget";
+import { Button } from "@/components/ui/button";
 
 async function Home() {
   const user = await getCurrentUser();
 
-  const [userInterviews, allInterview] = await Promise.all([
-    getInterviewsByUserId(user?.id!),
-    getLatestInterviews({ userId: user?.id! }),
-  ]);
+  // Check if user is authenticated
+  if (!user?.id) {
+    return (
+      <div>
+        <h2>You are not logged in. Please sign in.</h2>
+      </div>
+    );
+  }
 
-  const hasPastInterviews = userInterviews?.length! > 0;
-  const hasUpcomingInterviews = allInterview?.length! > 0;
-
-  const feedbacks = await getFeedbacksByUserId(user?.id);
+  const feedbacks = await getFeedbacksByUserId(user.id);
 
   return (
     <>
       <section>
+        {/* ----------------- Hero Section ---------------- */}
         <div className="card-cta">
           <div className="flex flex-col gap-6 max-w-2xl">
             <h2>Practice and Perfect Your Interview Skills with Mock AI</h2>
@@ -44,16 +41,18 @@ async function Home() {
 
           <Image
             src="/newRobot.png"
-            alt="robo-dude"
+            alt="robot"
             width={400}
             height={400}
             className="hidden lg:block"
           />
         </div>
 
-        <VapiWidget userName={user?.name!} userId={user?.id} type="generate" />
+        {/* ----------------- Voice AI Section ---------------- */}
+        <VapiWidget userName={user.name} userId={user.id} type="generate" />
       </section>
 
+      {/* ----------------- Feedback Section ---------------- */}
       <section className="flex flex-col gap-6">
         <h2 className="text-2xl font-semibold text-white">
           Interview Feedbacks

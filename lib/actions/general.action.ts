@@ -3,7 +3,10 @@
 import { db } from "@/firebase/admin";
 import { revalidatePath } from "next/cache";
 
-export async function getFeedbacksByUserId(userId: string) {
+// done
+export async function getFeedbacksByUserId(
+  userId: string
+): Promise<Feedback[]> {
   try {
     const snapshot = await db
       .collection("feedback")
@@ -14,7 +17,7 @@ export async function getFeedbacksByUserId(userId: string) {
     const feedbacks = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    }));
+    })) as Feedback[];
 
     return feedbacks;
   } catch (error) {
@@ -23,6 +26,7 @@ export async function getFeedbacksByUserId(userId: string) {
   }
 }
 
+// done
 export const deleteInterview = async (feedbackId: string) => {
   try {
     // Admin SDK diye delete korar way
