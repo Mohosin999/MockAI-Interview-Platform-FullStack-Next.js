@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/firebase/admin";
+import { revalidatePath } from "next/cache";
 
 export async function getFeedbacksByUserId(userId: string) {
   try {
@@ -21,6 +22,19 @@ export async function getFeedbacksByUserId(userId: string) {
     return [];
   }
 }
+
+export const deleteInterview = async (feedbackId: string) => {
+  try {
+    // Admin SDK diye delete korar way
+    await db.collection("feedback").doc(feedbackId).delete();
+
+    revalidatePath("/dashboard"); // jekhane cards show hocche sei path
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting interview:", error);
+    return { success: false, error };
+  }
+};
 
 export async function createFeedback(params: CreateFeedbackParams) {
   console.log("createFeedback");

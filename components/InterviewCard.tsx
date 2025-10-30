@@ -6,7 +6,7 @@ import { Button } from "./ui/button";
 import DisplayTechIcons from "./DisplayTechIcons";
 
 import { cn, getRandomInterviewCover } from "@/lib/utils";
-import { getFeedbackByInterviewId } from "@/lib/actions/general.action";
+import DeleteButton from "./DeleteButtonProps";
 
 const InterviewCard = async ({
   userId,
@@ -29,22 +29,31 @@ const InterviewCard = async ({
   const formattedDate = dayjs(createdAt || Date.now()).format("MMM D, YYYY");
 
   return (
-    <div className="card-border w-[360px] max-sm:w-full min-h-96">
+    <div className="card-border w-[360px] max-sm:w-full min-h-96 relative">
+      {/* Delete Button - Top Right */}
+      {/* <div className="absolute top-2 left-2 z-10">
+        <DeleteButton feedbackId={feedbackId} />
+      </div> */}
+
       <div className="card-interview">
         <div>
           {/* Type Badge */}
+          <div className={cn("absolute top-0 left-0 rounded-full", badgeColor)}>
+            <DeleteButton feedbackId={feedbackId} />
+          </div>
+
           <div
             className={cn(
               "absolute top-0 right-0 w-fit px-4 py-2 rounded-bl-lg",
               badgeColor
             )}
           >
-            <p className="badge-text ">{normalizedType}</p>
+            <p className="badge-text">{normalizedType}</p>
           </div>
 
           {/* Cover Image */}
           <Image
-            src={getRandomInterviewCover()}
+            src={"/quora.png"}
             alt="cover-image"
             width={90}
             height={90}
