@@ -8,7 +8,7 @@ const SignoutBtn = () => {
     <Button
       onClick={() => signOut()}
       variant="outline"
-      className="cursor-pointer"
+      className="active:scale-105 cursor-pointer"
     >
       Sign Out
     </Button>

@@ -248,7 +248,7 @@ const Agent = ({
             {callStatus === CallStatus.ACTIVE ? (
               <Phone className="relative w-8 h-8" />
             ) : callStatus === CallStatus.CONNECTING ? (
-              <PhoneCall className="relative w-8 h-8" />
+              <PhoneCall className="relative w-8 h-8 animate-bounce" />
             ) : (
               <PhoneOff className="relative w-8 h-8" />
             )}

@@ -47,7 +47,7 @@ const DeleteButton = ({ feedbackId }: DeleteButtonProps) => {
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button className="bg-[#010624] hover:bg-[#010624]/80 cursor-pointer">
+        <Button className="bg-[#010624] hover:bg-[#010624]/80 active:scale-105 cursor-pointer">
           <Trash className="h-16 w-16 text-primary-100" />
         </Button>
       </AlertDialogTrigger>
@@ -60,13 +60,16 @@ const DeleteButton = ({ feedbackId }: DeleteButtonProps) => {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting} className="cursor-pointer">
+          <AlertDialogCancel
+            disabled={isDeleting}
+            className="cursor-pointer active:scale-105"
+          >
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={isDeleting}
-            className="bg-red-500 hover:bg-red-600 text-white cursor-pointer"
+            className="bg-red-500 hover:bg-red-600 text-white cursor-pointer active:scale-105"
           >
             {isDeleting ? "Deleting..." : "Delete"}
           </AlertDialogAction>

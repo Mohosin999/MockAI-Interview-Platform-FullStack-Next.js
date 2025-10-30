@@ -30,11 +30,6 @@ const InterviewCard = async ({
 
   return (
     <div className="card-border w-[360px] max-sm:w-full min-h-96 relative">
-      {/* Delete Button - Top Right */}
-      {/* <div className="absolute top-2 left-2 z-10">
-        <DeleteButton feedbackId={feedbackId} />
-      </div> */}
-
       <div className="card-interview">
         <div>
           {/* Type Badge */}

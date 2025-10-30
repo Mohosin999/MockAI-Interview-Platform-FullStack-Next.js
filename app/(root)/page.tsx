@@ -32,7 +32,7 @@ async function Home() {
           <div className="flex flex-col gap-6 max-w-2xl">
             <h2>Practice and Perfect Your Interview Skills with Mock AI</h2>
             <p className="text-lg">
-              You can use button or AI call to go to your specific page
+              You can use the call option to select one from multiple options.
             </p>
 
             <div className="flex flex-col md:flex-row items-center gap-3">
@@ -59,24 +59,6 @@ async function Home() {
           Interview Feedbacks
         </h2>
 
-        {/* <div className="interviews-section">
-          {feedbacks ? (
-            feedbacks.map((feedback) => (
-              <InterviewCard
-                key={feedback.id}
-                feedbackId={feedback.id}
-                userId={feedback.userId}
-                role={feedback.role}
-                type={feedback.type}
-                techstack={feedback.techstack}
-                overallScore={feedback.overallScore}
-                createdAt={feedback.createdAt}
-              />
-            ))
-          ) : (
-            <p className="text-amber-300">You haven&apos;t taken any interviews yet</p>
-          )}
-        </div> */}
         {feedbacks?.length > 0 ? (
           <div className="interviews-section">
             {feedbacks.map((feedback) => (

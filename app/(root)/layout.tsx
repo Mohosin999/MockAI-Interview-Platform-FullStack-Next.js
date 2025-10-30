@@ -13,7 +13,7 @@ const Layout = async ({ children }: { children: ReactNode }) => {
   return (
     <div className="root-layout">
       <nav className="flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 active:scale-105">
           <Image src="/logo.png" alt="MockMate Logo" width={38} height={32} />
           <h2 className="text-primary-100 hidden md:block">MockAI</h2>
         </Link>
