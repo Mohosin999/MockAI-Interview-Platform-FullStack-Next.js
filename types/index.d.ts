@@ -5,7 +5,7 @@ interface Feedback {
   role: string;
   type: string;
   techstack: string[];
-  questionsWithAIAnswers: string[];
+  questionsWithAIAnswers: { question: string; answer: string }[];
   areasForImprovement: string[];
   overallScore: number;
   createdAt: string;

@@ -76,7 +76,7 @@ const Feedback = async ({ params }: RouteParams) => {
             <h2 className="text-2xl font-semibold text-white">
               Asked Questions & AI Answers:
             </h2>
-            {feedback.questionsWithAIAnswers.map((q, i: number) => (
+            {feedback.questionsWithAIAnswers.map((q , i: number) => (
               <div key={i} className="border border-gray-700 rounded-lg p-4">
                 <p className="font-bold mb-2">
                   Q{i + 1}: {q.question}
