@@ -4,12 +4,10 @@ import Image from "next/image";
 
 import { Button } from "./ui/button";
 import DisplayTechIcons from "./DisplayTechIcons";
-
-import { cn, getRandomInterviewCover } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import DeleteButton from "./DeleteButtonProps";
 
 const InterviewCard = async ({
-  userId,
   feedbackId,
   role,
   type,
@@ -26,7 +24,8 @@ const InterviewCard = async ({
       Technical: "bg-light-800",
     }[normalizedType] || "bg-light-600";
 
-  const formattedDate = dayjs(createdAt || Date.now()).format("MMM D, YYYY");
+  const safeDate = createdAt ? createdAt : new Date();
+  const formattedDate = dayjs(safeDate).format("MMM D, YYYY");
 
   return (
     <div className="card-border w-[360px] max-sm:w-full min-h-96 relative">

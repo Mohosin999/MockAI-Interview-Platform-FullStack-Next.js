@@ -123,23 +123,6 @@ const Agent = ({ userName, userId, type, questions }: AgentProps) => {
     handleCallCompletion();
   }, [callStatus, messages, router]);
 
-  // ---------- Handle Redirection When Feedback ID is Available ----------
-  // useEffect(() => {
-  //   const redirectToFeedback = () => {
-  //     // Only redirect when we have a valid feedback ID and call is finished
-  //     if (callStatus === CallStatus.FINISHED && generatedFeedbackId) {
-  //       console.log("Redirecting to feedback page:", generatedFeedbackId);
-
-  //       // Use setTimeout to ensure the component completes its state updates
-  //       setTimeout(() => {
-  //         router.push(`/interview/${generatedFeedbackId}/feedback`);
-  //       }, 1000); // Small delay to ensure smooth transition
-  //     }
-  //   };
-
-  //   redirectToFeedback();
-  // }, [generatedFeedbackId, callStatus, router]);
-
   // ---------- Call Control Functions ----------
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);

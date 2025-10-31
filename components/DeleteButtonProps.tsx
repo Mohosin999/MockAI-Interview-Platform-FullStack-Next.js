@@ -17,10 +17,6 @@ import { Button } from "@/components/ui/button";
 import { deleteInterview } from "@/lib/actions/general.action";
 import { Trash } from "lucide-react";
 
-interface DeleteButtonProps {
-  feedbackId: string;
-}
-
 const DeleteButton = ({ feedbackId }: DeleteButtonProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [open, setOpen] = useState(false);

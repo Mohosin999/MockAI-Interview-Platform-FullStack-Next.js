@@ -1,4 +1,3 @@
-//done
 interface Feedback {
   id: string;
   userId: string;
@@ -11,13 +10,11 @@ interface Feedback {
   createdAt: string;
 }
 
-// done
 interface SavedMessage {
   role: "user" | "system" | "assistant";
   content: string;
 }
 
-// done
 interface AgentProps {
   userName: string;
   userId: string;
@@ -27,18 +24,30 @@ interface AgentProps {
   questions?: string[];
 }
 
-// done
 interface RouteParams {
   params: Promise<Record<string, string>>;
   searchParams: Promise<Record<string, string>>;
 }
 
-// done
 interface VapiMessage {
   type: string;
   transcriptType?: string;
   role?: string;
   transcript?: string;
+}
+
+interface DeleteButtonProps {
+  feedbackId: string;
+}
+
+interface InterviewCardProps {
+  feedbackId: string;
+  userId?: string;
+  role: string;
+  type: string;
+  techstack: string[];
+  overallScore: number;
+  createdAt?: string;
 }
 
 interface Interview {
@@ -64,16 +73,6 @@ interface User {
   name: string;
   email: string;
   id: string;
-}
-
-interface InterviewCardProps {
-  feedbackId?: string;
-  userId?: string;
-  role: string;
-  type: string;
-  techstack: string[];
-  overallScore: number;
-  createdAt?: string;
 }
 
 interface AgentProps {
