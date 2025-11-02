@@ -25,7 +25,7 @@ Built with Next.js, TypeScript, Firebase, VAPI, Google Gemini AI and Tailwind CS
 #### `Secure Authentication`
 
 - Fully protected authentication using **Firebase Authentication**.
-- Only authenticated users can access AI interviews, feedback, and history.
+- Only authenticated users can access the app.
 - User sessions and data are securely stored in Firebase Firestore.
 
 #### `AI-Guided Navigation`
