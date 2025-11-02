@@ -12,7 +12,7 @@
 
 ## 📝 Description
 
-MockAI is an intelligent web application that helps users prepare for real interviews using AI-driven mock sessions, personalized feedback, and smart question recommendations. The platform provides a realistic interview experience powered by VAP, allowing users to talk directly with the AI interviewer. It uses secure Firebase Authentication to protect user data, feedback history, and interview performance.
+MockAI is an intelligent web application that helps users prepare for real interviews using AI-driven mock sessions, personalized feedback, and smart question recommendations. The platform provides a realistic interview experience powered by VAPI, allowing users to talk directly with the AI interviewer. It uses secure Firebase Authentication to protect user data, feedback history, and interview performance.
 
 Built with Next.js, TypeScript, Firebase, VAPI, Google Gemini AI and Tailwind CSS, MockAI offers a modern, fast, and secure environment for practicing and improving your interview skills.
 
